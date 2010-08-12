@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server>
+
+  <mbean code="org.jboss.jms.server.destination.TopicService"
+    name="jboss.esb.quickstart.destination:service=Topic,name=norm_esb"
+    xmbean-dd="xmdesc/Topic-xmbean.xml">
+    <depends optional-attribute-name="ServerPeer">jboss.messaging:service=ServerPeer</depends>
+    <attribute name="SecurityConfig">
+       <security>
+         <role name="guest" read="true" write="true" create="true"/>
+       </security>
+    </attribute>
+  </mbean>
+
+</server>

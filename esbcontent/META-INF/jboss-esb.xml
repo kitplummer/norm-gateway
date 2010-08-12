@@ -1,32 +1,56 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<jbossesb xmlns="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.1.0.xsd" parameterReloadSecs="5">
-    <providers>
-        <bus-provider name="NORM">
+<jbossesb
+	xmlns="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.1.0.xsd"
+	parameterReloadSecs="5">
+	<providers>
+		<bus-provider name="NORM">
 
-            <bus busid="NormBus">
-                <property name="bus-property" value="bus-prop-value" />
-            </bus>
-        </bus-provider>
-    </providers>	
+			<bus busid="NormBus">
+				<property name="bus-property" value="bus-prop-value" />
+			</bus>
+		</bus-provider><!--
+		<jms-provider name="JBossMQ" connection-factory="ConnectionFactory">
+            <jms-bus busid="normEsbChannel">
+                <jms-message-filter
+                        dest-type="QUEUE"
+                        dest-name="queue/queue_norm_esb"/>
+            </jms-bus>
+
+        </jms-provider>
+	--></providers>
 	<services>
 
-        <service category="Custom" name="NormServiceListener" description="Alpha Service for NORM Gateway" invmScope="GLOBAL">
+		<service category="Custom" name="NormServiceListener"
+			description="Alpha Service for NORM Gateway" invmScope="GLOBAL">
 
-		<listeners>
-			<listener name="norm-listener" busidref="NormBus" is-gateway="true">
-				<property name="gatewayClass" value="com.opsysinc.norm.NormGatewayListener" />
-<!--				<property name="listener-property" value="listener-prop-value" />-->
-			</listener>
-            	</listeners>
+			<listeners>
+				<listener name="custom-listener" busidref="NormBus"
+					is-gateway="true">
+					<property name="gatewayClass" value="com.dozersoftware.norm.NormGatewayListener" />
+					<!-- <property name="listener-property" value="listener-prop-value" 
+						/> -->
+				</listener>
+			</listeners>
 
-            <actions mep="OneWay">
-		<action name="printMessage" class="org.jboss.soa.esb.actions.SystemPrintln">
-		<property name="message" value="NormServiceCategory:NormService"/>
-		<property name="printfull" value="false"/>
-		</action>
-            </actions>
+			<actions mep="OneWay">
+				<action name="notificationAction" class="org.jboss.soa.esb.actions.Notifier">    
+					<property name="okMethod" value="notifyOK" />
+					<property name="notification-details"> 
+                       	<NotificationList type="ok">
+							<target class="NotifyConsole"/>
+                        	<target class="NotifyFiles">
+								<file append="false" URI="file:////home/kplummer/Dev/norm.log"/>
+								<file append="false" URI="/tmp/NORM.log"/>
+							</target>
+							<target class="NotifyTopics">
+								<topic jndiName="topic/norm_esb"/>
+							</target>	
+						</NotificationList>
+					</property>
+				</action>
+        </actions>
 
-	</service>
+		</service>
 
 	</services>
 

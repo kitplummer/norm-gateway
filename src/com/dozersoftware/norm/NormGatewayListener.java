@@ -8,20 +8,6 @@ package com.dozersoftware.norm;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-
-import org.jboss.soa.esb.helpers.ConfigTree;
-import org.jboss.soa.esb.message.Message;
-import org.jboss.soa.esb.message.format.MessageFactory;
-import org.jboss.soa.esb.listeners.lifecycle.AbstractThreadedManagedLifecycle;
-import org.jboss.soa.esb.listeners.lifecycle.ManagedLifecycleException;
-
-import org.jboss.soa.esb.listeners.message.MessageDeliverException;
-import org.jboss.soa.esb.client.ServiceInvoker;
-import org.jboss.soa.esb.listeners.ListenerTagNames;
-import org.jboss.soa.esb.Service;
-import org.jboss.soa.esb.ConfigurationException;
 
 import mil.navy.nrl.norm.NormEvent;
 import mil.navy.nrl.norm.NormFile;
@@ -32,6 +18,17 @@ import mil.navy.nrl.norm.NormSession;
 import mil.navy.nrl.norm.NormStream;
 import mil.navy.nrl.norm.enums.NormEventType;
 import mil.navy.nrl.norm.enums.NormObjectType;
+
+import org.jboss.soa.esb.ConfigurationException;
+import org.jboss.soa.esb.Service;
+import org.jboss.soa.esb.client.ServiceInvoker;
+import org.jboss.soa.esb.helpers.ConfigTree;
+import org.jboss.soa.esb.listeners.ListenerTagNames;
+import org.jboss.soa.esb.listeners.lifecycle.AbstractThreadedManagedLifecycle;
+import org.jboss.soa.esb.listeners.lifecycle.ManagedLifecycleException;
+import org.jboss.soa.esb.listeners.message.MessageDeliverException;
+import org.jboss.soa.esb.message.Message;
+import org.jboss.soa.esb.message.format.MessageFactory;
 
 public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
@@ -80,11 +77,7 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
 	protected void doRun() {
 		while (isRunning()) {
-			// Wait for a message....
-			// Object payloadObject = waitForPayload();
 
-			// Send the message to the target service's Action Pipeline via
-			// the ServiceInvoker...
 			try {
 				NormEvent event;
 				while ((event = instance.getNextEvent()) != null) {
@@ -101,13 +94,14 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 						break;
 
 					case NORM_RX_OBJECT_UPDATED:
-						int readLength, rxPacketLength = 0, rxIndex = 0;
-						
+						int readLength,
+						rxPacketLength = 0,
+						rxIndex = 0;
+
 						byte[] rxStreamBuffer = new byte[MAX_PACKET_LENGTH + 1];
 						if (normObject.getType() == NormObjectType.NORM_OBJECT_STREAM) {
 							// Process incoming chat
 							boolean msgSync = false;
-							boolean header = true;
 							System.out
 									.println("normChat: NORM_RX_OBJECT_UPDATED received for NORM_OBJECT_STREAM from  "
 											+ normObject.getSender().getId());
@@ -115,49 +109,53 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 								if (!msgSync) {
 									System.out
 											.println("normChat: ProcessNormEvent msgSync = false, trying to sync");
-									msgSync = ((NormStream) normObject).seekMsgStart();
+									msgSync = ((NormStream) normObject)
+											.seekMsgStart();
 
 									if (!msgSync) {
 										break;
 									}
-									System.out.println("normChat: ProcessNormEvent resync successful.");
+									System.out
+											.println("normChat: ProcessNormEvent resync successful.");
 								}
 
-								readLength = rxPacketLength != 0 ? (rxPacketLength - rxIndex) : 2 - rxIndex;
-//								if (header) {
-//									System.out.println("Header null, pulling in header 2 bytes.");
-//									header = false;
-//									readLength = 2;
-//								} else {
-//									readLength = 2 - rxIndex;
-//									System.out.println("Have header, pullin in " + readLength);
-//								}
-								//readLength = 2
+								readLength = rxPacketLength != 0 ? (rxPacketLength - rxIndex)
+										: 2 - rxIndex;
 
-								if (((NormStream) normObject).read(rxStreamBuffer, rxIndex, readLength) != 0) {
-									System.out.println("Inside NORMStreamRead check - readLength:" +readLength);
+								if (((NormStream) normObject).read(
+										rxStreamBuffer, rxIndex, readLength) != 0) {
+									System.out
+											.println("Inside NORMStreamRead check - readLength:"
+													+ readLength);
 									if (readLength > 0) {
-										System.out.println("rxIndex: " + rxIndex);
+										System.out.println("rxIndex: "
+												+ rxIndex);
 										rxIndex += readLength;
-										
+
 										if (rxPacketLength == 0) {
 											if (rxIndex >= 2) {
-												System.out.println("NORM: Reading Header");
+												System.out
+														.println("NORM: Reading Header");
 												// HHHMMMMNNNN!
-												
-												DataInputStream in = new DataInputStream(new ByteArrayInputStream(rxStreamBuffer));
+
+												DataInputStream in = new DataInputStream(
+														new ByteArrayInputStream(
+																rxStreamBuffer));
 												rxPacketLength = in.readChar();
-												System.out.println("Packet Length: " + rxPacketLength);
-												
-												
-												if (rxPacketLength < 2 || rxPacketLength > MAX_PACKET_LENGTH) {
-													System.out.println("Resetting!");
+												// System.out.println("Packet Length: "
+												// + rxPacketLength);
+
+												if (rxPacketLength < 2
+														|| rxPacketLength > MAX_PACKET_LENGTH) {
+													System.out
+															.println("Resetting!");
 													msgSync = false;
 													rxIndex = rxPacketLength = 0;
 													break;
 												}
 											} else {
-												System.out.println("NORM: COntinuing!");
+												System.out
+														.println("NORM: COntinuing!");
 												continue;
 											}
 										}
@@ -174,17 +172,21 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
 								}
 
-								if (rxPacketLength > 0 && (rxIndex >= rxPacketLength)) {
+								if (rxPacketLength > 0
+										&& (rxIndex >= rxPacketLength)) {
 									rxStreamBuffer[rxIndex] = '\0';
-									
-									DataInputStream in = new DataInputStream(new ByteArrayInputStream(rxStreamBuffer));
+
+									DataInputStream in = new DataInputStream(
+											new ByteArrayInputStream(
+													rxStreamBuffer));
 									byte[] payload = new byte[rxPacketLength - 2];
 									in.skipBytes(2);
 									in.read(payload, 0, rxPacketLength - 2);
-									
-									String text = new String(payload, "US-ASCII");
-									System.out.println("Message: " + text);
-									processMessage(event, text);
+
+									String text = new String(payload,
+											"US-ASCII");
+									// System.out.println("Message: " + text);
+									processMessage(text);
 
 									rxIndex = rxPacketLength = 0;
 								}
@@ -214,18 +216,18 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 			}
 		}
 	}
-	
-	public void processMessage(NormEvent event, String messageText) {
-		
+
+	/* Push the message on to the bus */
+	public void processMessage(String messageText) {
+
 		Message esbMessage = MessageFactory.getInstance().getMessage();
 
-		esbMessage.getBody().add(new String("NORM: Have Message! " + messageText));
+		esbMessage.getBody().add(new String(messageText));
 		try {
 			serviceInvoker.deliverAsync(esbMessage);
 		} catch (MessageDeliverException e) {
 			e.printStackTrace();
 		}
 	}
-	
 
 }
