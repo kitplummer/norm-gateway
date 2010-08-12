@@ -1,0 +1,33 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<jbossesb xmlns="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.1.0.xsd" parameterReloadSecs="5">
+    <providers>
+        <bus-provider name="NORM">
+
+            <bus busid="NormBus">
+                <property name="bus-property" value="bus-prop-value" />
+            </bus>
+        </bus-provider>
+    </providers>	
+	<services>
+
+        <service category="Custom" name="NormServiceListener" description="Alpha Service for NORM Gateway" invmScope="GLOBAL">
+
+		<listeners>
+			<listener name="norm-listener" busidref="NormBus" is-gateway="true">
+				<property name="gatewayClass" value="com.opsysinc.norm.NormGatewayListener" />
+<!--				<property name="listener-property" value="listener-prop-value" />-->
+			</listener>
+            	</listeners>
+
+            <actions mep="OneWay">
+		<action name="printMessage" class="org.jboss.soa.esb.actions.SystemPrintln">
+		<property name="message" value="NormServiceCategory:NormService"/>
+		<property name="printfull" value="false"/>
+		</action>
+            </actions>
+
+	</service>
+
+	</services>
+
+</jbossesb>
