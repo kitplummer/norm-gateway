@@ -1,0 +1,17 @@
+h1. NormGatewayListener
+
+This is a simple (incomplete) module for consuming NORM ("http://cs.itd.nrl.navy.mil/work/norm/":http://cs.itd.nrl.navy.mil/work/norm/ ) messages and putting them on the JBoss ESB.
+
+h2. Requires
+
+The norm.*.jar library and the Eclipse JBoss Tools setup.  
+
+h2. Todo
+
+Tests
+Ant/Maven builder
+Support for file/image transfer
+
+h2. License
+
+This software is licensed under the Simplified BSD License.  See license.txt for more details.

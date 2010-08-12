@@ -1,4 +1,10 @@
-package com.opsysinc.norm;
+/*
+ * Copyright 2010 Dozer Software, LLC
+ * This software is licensed under the Simplified BSD License.
+ * See license.txt for details.
+ */
+
+package com.dozersoftware.norm;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
