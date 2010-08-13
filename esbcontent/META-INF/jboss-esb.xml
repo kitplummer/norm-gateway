@@ -48,6 +48,7 @@
 						</NotificationList>
 					</property>
 				</action>
+				<action name="normOut" class="com.dozersoftware.norm.NormProcessor"/>
         </actions>
 
 		</service>
