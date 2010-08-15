@@ -1,16 +1,17 @@
-h1. NormGatewayListener
+h1. NormGateway
 
-This is a simple (incomplete) module for consuming NORM ("http://cs.itd.nrl.navy.mil/work/norm/":http://cs.itd.nrl.navy.mil/work/norm/ ) messages and putting them on the JBoss ESB.
+This is a simple (incomplete) module for consuming NORM Chat ("http://cs.itd.nrl.navy.mil/work/norm/":http://cs.itd.nrl.navy.mil/work/norm/ ) messages and putting them on the JBoss ESB.  There is also a customer JBossESB Action that can receive and post NormChat messages.
 
 h2. Requires
 
-The norm.*.jar library and the Eclipse JBoss Tools setup.  
+The norm.*.jar library and the Eclipse JBoss Tools setup in order to build.  
 
 h2. Todo
 
 Tests
 Ant/Maven builder
 Support for file/image transfer
+Handle generic NORM messages
 
 h2. License
 

@@ -48,7 +48,9 @@
 						</NotificationList>
 					</property>
 				</action>
-				<action name="normOut" class="com.dozersoftware.norm.NormProcessor"/>
+				<action name="normOut" class="com.dozersoftware.norm.NormProcessor">
+					<property name="handle" value="SYSTEMX" />
+				</action>
         </actions>
 
 		</service>

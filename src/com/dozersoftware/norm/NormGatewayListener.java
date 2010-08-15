@@ -61,10 +61,14 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 			serviceInvoker = new ServiceInvoker(service);
 			instance = NormInstance.getInstance();
 			instance.setCacheDirectory("/tmp/norm");
-
+			
 			session = instance.createSession("224.1.2.3", 6003,
 					NormNode.NORM_NODE_ANY);
+			
+			session.setRxPortReuse(true, false);
+
 			session.startReceiver(1024 * 1024);
+			
 			System.out.println("NORM: Setting up Gateway Listener (session): " + session.getHandle());
 		} catch (MessageDeliverException e) {
 			throw new ManagedLifecycleException(
