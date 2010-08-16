@@ -8,53 +8,53 @@
 			<bus busid="NormBus">
 				<property name="bus-property" value="bus-prop-value" />
 			</bus>
-		</bus-provider><!--
-		<jms-provider name="JBossMQ" connection-factory="ConnectionFactory">
-            <jms-bus busid="normEsbChannel">
-                <jms-message-filter
-                        dest-type="QUEUE"
-                        dest-name="queue/queue_norm_esb"/>
-            </jms-bus>
-
-        </jms-provider>
-	--></providers>
+		</bus-provider><!-- <jms-provider name="JBossMQ" connection-factory="ConnectionFactory"> 
+			<jms-bus busid="normEsbChannel"> <jms-message-filter dest-type="QUEUE" dest-name="queue/queue_norm_esb"/> 
+			</jms-bus> </jms-provider> -->
+	</providers>
 	<services>
 
-		<service category="Custom" name="NormServiceListener"
+		<service category="Norm" name="NormGatewayListener"
 			description="Alpha Service for NORM Gateway" invmScope="GLOBAL">
 
 			<listeners>
 				<listener name="custom-listener" busidref="NormBus"
 					is-gateway="true">
-					<property name="gatewayClass" value="com.dozersoftware.norm.NormGatewayListener" />
+					<property name="gatewayClass"
+						value="com.dozersoftware.norm.NormGatewayListener" />
 					<!-- <property name="listener-property" value="listener-prop-value" 
 						/> -->
 				</listener>
 			</listeners>
 
 			<actions mep="OneWay">
-				<action name="notificationAction" class="org.jboss.soa.esb.actions.Notifier">    
+				<action name="notificationAction" class="org.jboss.soa.esb.actions.Notifier">
 					<property name="okMethod" value="notifyOK" />
-					<property name="notification-details"> 
-                       	<NotificationList type="ok">
-							<target class="NotifyConsole"/>
-                        	<target class="NotifyFiles">
-								<file append="false" URI="file:////home/kplummer/Dev/norm.log"/>
-								<file append="false" URI="/tmp/NORM.log"/>
+					<property name="notification-details">
+						<NotificationList type="ok">
+							<target class="NotifyConsole" />
+							<target class="NotifyFiles">
+								<file append="false" URI="file:////home/kplummer/Dev/norm.log" />
+								<file append="false" URI="/tmp/NORM.log" />
 							</target>
 							<target class="NotifyTopics">
-								<topic jndiName="topic/norm_esb"/>
-							</target>	
+								<topic jndiName="topic/norm_esb" />
+							</target>
 						</NotificationList>
 					</property>
 				</action>
+			</actions>
+
+		</service>
+		<service category="Norm" name="NormProcessor" description="Send NORM chat messages"
+				invmScope="GLOBAL">
+			<actions>
+				<action name="println" class="org.jboss.soa.esb.actions.SystemPrintln" />
 				<action name="normOut" class="com.dozersoftware.norm.NormProcessor">
 					<property name="handle" value="SYSTEMX" />
 				</action>
-        </actions>
-
+			</actions>
 		</service>
-
 	</services>
 
 </jbossesb>
