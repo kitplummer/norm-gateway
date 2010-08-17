@@ -1,60 +1,64 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
-<jbossesb
-	xmlns="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.1.0.xsd"
-	parameterReloadSecs="5">
-	<providers>
-		<bus-provider name="NORM">
-
-			<bus busid="NormBus">
-				<property name="bus-property" value="bus-prop-value" />
-			</bus>
-		</bus-provider><!-- <jms-provider name="JBossMQ" connection-factory="ConnectionFactory"> 
+<?xml version="1.0"?>
+<jbossesb parameterReloadSecs="5"
+ xmlns="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.1.0.xsd"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.1.0.xsd http://anonsvn.jboss.org/repos/labs/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.1.0.xsd">
+ <providers>
+  <bus-provider name="NORM">
+   <bus busid="NormBus">
+    <property name="bus-property" value="bus-prop-value"/>
+   </bus>
+  </bus-provider>
+  <jms-provider connection-factory="ConnectionFactory" name="JBossMQ">
+   <jms-bus busid="normEsbChannel">
+    <jms-message-filter dest-name="queue/norm_out" dest-type="QUEUE"/>
+   </jms-bus>
+  </jms-provider>
+  <!-- <jms-provider name="JBossMQ" connection-factory="ConnectionFactory"> 
 			<jms-bus busid="normEsbChannel"> <jms-message-filter dest-type="QUEUE" dest-name="queue/queue_norm_esb"/> 
 			</jms-bus> </jms-provider> -->
-	</providers>
-	<services>
-
-		<service category="Norm" name="NormGatewayListener"
-			description="Alpha Service for NORM Gateway" invmScope="GLOBAL">
-
-			<listeners>
-				<listener name="custom-listener" busidref="NormBus"
-					is-gateway="true">
-					<property name="gatewayClass"
-						value="com.dozersoftware.norm.NormGatewayListener" />
-					<!-- <property name="listener-property" value="listener-prop-value" 
+ </providers>
+ <services>
+  <service category="Norm" description="Alpha Service for NORM Gateway"
+   invmScope="GLOBAL" name="NormGatewayListener">
+   <listeners>
+    <listener busidref="NormBus" is-gateway="true" name="custom-listener">
+     <property name="gatewayClass" value="com.dozersoftware.norm.NormGatewayListener"/>
+     <!-- <property name="listener-property" value="listener-prop-value" 
 						/> -->
-				</listener>
-			</listeners>
-
-			<actions mep="OneWay">
-				<action name="notificationAction" class="org.jboss.soa.esb.actions.Notifier">
-					<property name="okMethod" value="notifyOK" />
-					<property name="notification-details">
-						<NotificationList type="ok">
-							<target class="NotifyConsole" />
-							<target class="NotifyFiles">
-								<file append="false" URI="file:////home/kplummer/Dev/norm.log" />
-								<file append="false" URI="/tmp/NORM.log" />
-							</target>
-							<target class="NotifyTopics">
-								<topic jndiName="topic/norm_esb" />
-							</target>
-						</NotificationList>
-					</property>
-				</action>
-			</actions>
-
-		</service>
-		<service category="Norm" name="NormProcessor" description="Send NORM chat messages"
-				invmScope="GLOBAL">
-			<actions>
-				<action name="println" class="org.jboss.soa.esb.actions.SystemPrintln" />
-				<action name="normOut" class="com.dozersoftware.norm.NormProcessor">
-					<property name="handle" value="SYSTEMX" />
-				</action>
-			</actions>
-		</service>
-	</services>
-
+    </listener>
+   </listeners>
+   <actions mep="OneWay">
+    <action class="org.jboss.soa.esb.actions.Notifier" name="notificationAction">
+     <property name="okMethod" value="notifyOK"/>
+     <property name="destinations">
+      <NotificationList type="ok">
+       <target class="NotifyConsole"/>
+       <target class="NotifyFiles">
+        <file URI="file:////home/kplummer/Dev/norm.log" append="false"/>
+        <file URI="/tmp/NORM.log" append="false"/>
+       </target>
+       <target class="NotifyTopics">
+        <topic jndiName="topic/norm_in"/>
+       </target>
+      </NotificationList>
+     </property>
+    </action>
+   </actions>
+  </service>
+  <service category="Norm" description="Send NORM chat messages"
+   invmScope="GLOBAL" name="NormProcessor">
+   <listeners>
+    <jms-listener busidref="normEsbChannel" name="norm_out" />
+   </listeners>
+   <actions>
+    <action class="org.jboss.soa.esb.actions.SystemPrintln" name="println">
+     <property name="message"/>
+    </action>
+    <action class="com.dozersoftware.norm.NormProcessor" name="normOut">
+     <property name="handle" value="SYSTEMX"/>
+    </action>
+   </actions>
+   
+  </service>
+ </services>
 </jbossesb>

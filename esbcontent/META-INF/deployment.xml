@@ -1,2 +1,3 @@
 <jbossesb-deployment>
+	<depends>jboss.esb.quickstart.destination:service=Queue,name=norm_out</depends>
 </jbossesb-deployment>

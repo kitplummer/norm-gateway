@@ -2,7 +2,7 @@
 <server>
 
   <mbean code="org.jboss.jms.server.destination.TopicService"
-    name="jboss.esb.quickstart.destination:service=Topic,name=norm_esb"
+    name="jboss.esb.quickstart.destination:service=Topic,name=norm_in"
     xmbean-dd="xmdesc/Topic-xmbean.xml">
     <depends optional-attribute-name="ServerPeer">jboss.messaging:service=ServerPeer</depends>
     <attribute name="SecurityConfig">
@@ -11,5 +11,10 @@
        </security>
     </attribute>
   </mbean>
-
+<mbean code="org.jboss.jms.server.destination.QueueService"
+    name="jboss.esb.quickstart.destination:service=Queue,name=norm_out"
+    xmbean-dd="xmdesc/Queue-xmbean.xml">
+	<depends optional-attribute-name="ServerPeer">jboss.messaging:service=ServerPeer</depends>
+	<depends>jboss.messaging:service=PostOffice</depends>
+  </mbean>
 </server>

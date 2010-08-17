@@ -61,15 +61,16 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 			serviceInvoker = new ServiceInvoker(service);
 			instance = NormInstance.getInstance();
 			instance.setCacheDirectory("/tmp/norm");
-			
+
 			session = instance.createSession("224.1.2.3", 6003,
 					NormNode.NORM_NODE_ANY);
-			
+
 			session.setRxPortReuse(true, false);
 
 			session.startReceiver(1024 * 1024);
-			
-			System.out.println("NORM: Setting up Gateway Listener (session): " + session.getHandle());
+
+			System.out.println("NORM: Setting up Gateway Listener (session): "
+					+ session.getHandle());
 		} catch (MessageDeliverException e) {
 			throw new ManagedLifecycleException(
 					"Failed to create ServiceInvoker for Service '" + service
@@ -234,4 +235,27 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 		}
 	}
 
+	protected void doStop() {
+		if (isRunning()) {
+			String handle = "SYSTEMX";
+			Message esbMessage = MessageFactory.getInstance().getMessage();
+			String text = "<MESSAGE type=\"disconnect\" sender=\"" + handle
+					+ "\"></MESSAGE>";
+			esbMessage.getBody().add(new String(text));
+			try {
+				serviceInvoker.deliverAsync(esbMessage);
+			} catch (MessageDeliverException e) {
+				e.printStackTrace();
+			}
+		} else {
+			System.out.println("Didn't send Disconnect message...");
+		}
+
+	}
+
+	protected void doThreadedDestroy() {
+		if (isStopped()) {
+			System.out.println("NormGatewayListener Stopped");
+		}
+	}
 }
