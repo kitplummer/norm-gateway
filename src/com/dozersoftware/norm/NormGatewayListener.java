@@ -8,6 +8,7 @@ package com.dozersoftware.norm;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.IOException;
 
 import mil.navy.nrl.norm.NormEvent;
 import mil.navy.nrl.norm.NormFile;
@@ -26,6 +27,7 @@ import org.jboss.soa.esb.helpers.ConfigTree;
 import org.jboss.soa.esb.listeners.ListenerTagNames;
 import org.jboss.soa.esb.listeners.lifecycle.AbstractThreadedManagedLifecycle;
 import org.jboss.soa.esb.listeners.lifecycle.ManagedLifecycleException;
+import org.jboss.soa.esb.listeners.lifecycle.ManagedLifecycleThreadState;
 import org.jboss.soa.esb.listeners.message.MessageDeliverException;
 import org.jboss.soa.esb.message.Message;
 import org.jboss.soa.esb.message.format.MessageFactory;
@@ -39,6 +41,9 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 	private NormInstance instance;
 	private NormSession session;
 
+	private String handle;
+	private boolean stop = false;
+	
 	private int MAX_PACKET_LENGTH = 2048;
 
 	public NormGatewayListener(final ConfigTree config)
@@ -52,6 +57,8 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 				.getRequiredAttribute(ListenerTagNames.TARGET_SERVICE_NAME_TAG);
 
 		service = new Service(serviceCategory, serviceName);
+
+		this.handle = config.getAttribute("handle");
 	}
 
 	protected void doInitialise() throws ManagedLifecycleException {
@@ -59,7 +66,7 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 		try {
 
 			serviceInvoker = new ServiceInvoker(service);
-			instance = NormInstance.getInstance();
+			instance = new NormInstance();
 			instance.setCacheDirectory("/tmp/norm");
 
 			session = instance.createSession("224.1.2.3", 6003,
@@ -69,8 +76,6 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
 			session.startReceiver(1024 * 1024);
 
-			System.out.println("NORM: Setting up Gateway Listener (session): "
-					+ session.getHandle());
 		} catch (MessageDeliverException e) {
 			throw new ManagedLifecycleException(
 					"Failed to create ServiceInvoker for Service '" + service
@@ -107,9 +112,7 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 						if (normObject.getType() == NormObjectType.NORM_OBJECT_STREAM) {
 							// Process incoming chat
 							boolean msgSync = false;
-							System.out
-									.println("normChat: NORM_RX_OBJECT_UPDATED received for NORM_OBJECT_STREAM from  "
-											+ normObject.getSender().getId());
+
 							while (true) {
 								if (!msgSync) {
 									System.out
@@ -139,9 +142,6 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
 										if (rxPacketLength == 0) {
 											if (rxIndex >= 2) {
-												System.out
-														.println("NORM: Reading Header");
-												// HHHMMMMNNNN!
 
 												DataInputStream in = new DataInputStream(
 														new ByteArrayInputStream(
@@ -152,16 +152,13 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
 												if (rxPacketLength < 2
 														|| rxPacketLength > MAX_PACKET_LENGTH) {
-													System.out
-															.println("Resetting!");
+
 													msgSync = false;
 													rxIndex = rxPacketLength = 0;
 													break;
 												}
 											} else {
-												System.out
-														.println("NORM: COntinuing!");
-												continue;
+
 											}
 										}
 									} else {
@@ -199,27 +196,17 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 						}
 						break;
 
-					case NORM_RX_OBJECT_COMPLETED:
-						if (normObject.getType() == NormObjectType.NORM_OBJECT_FILE) {
-							NormFile normFile = (NormFile) normObject;
-							String filename = normFile.getName();
-
-							System.out.println("NormFileObject: " + filename);
-							Message esbMessage = MessageFactory.getInstance()
-									.getMessage();
-
-							esbMessage.getBody().add(
-									new String("NORM: Have File! " + filename));
-							serviceInvoker.deliverAsync(esbMessage);
-						}
-						break;
 					}
 				}
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (IOException e) {
+				
+				setRunning(ManagedLifecycleThreadState.STOPPING);
+				System.out.println("NORM: ERROR Processing Incoming Message");
+
 			}
 		}
+		System.out.println("Have Stopped Running.");
 	}
 
 	/* Push the message on to the bus */
@@ -236,26 +223,32 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 	}
 
 	protected void doStop() {
-		if (isRunning()) {
-			String handle = "SYSTEMX";
-			Message esbMessage = MessageFactory.getInstance().getMessage();
-			String text = "<MESSAGE type=\"disconnect\" sender=\"" + handle
-					+ "\"></MESSAGE>";
-			esbMessage.getBody().add(new String(text));
-			try {
-				serviceInvoker.deliverAsync(esbMessage);
-			} catch (MessageDeliverException e) {
-				e.printStackTrace();
-			}
-		} else {
-			System.out.println("Didn't send Disconnect message...");
+		this.stop = true;
+		super.setRunning(ManagedLifecycleThreadState.STOPPING);
+		setRunning(ManagedLifecycleThreadState.STOPPING);
+		session.stopReceiver();
+		session.destroySession();
+
+		instance.stopInstance();
+
+		instance.destroyInstance();
+		
+		try {
+			super.doStop();
+		} catch (ManagedLifecycleException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 	}
-
+	
 	protected void doThreadedDestroy() {
-		if (isStopped()) {
-			System.out.println("NormGatewayListener Stopped");
+		try {
+			super.doThreadedDestroy();
+		} catch (ManagedLifecycleException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
+
 }

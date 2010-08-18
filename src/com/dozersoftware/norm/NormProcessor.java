@@ -14,7 +14,9 @@ import org.jboss.soa.esb.actions.AbstractActionPipelineProcessor;
 import org.jboss.soa.esb.actions.ActionLifecycleException;
 import org.jboss.soa.esb.actions.ActionProcessingException;
 import org.jboss.soa.esb.helpers.ConfigTree;
+import org.jboss.soa.esb.listeners.message.MessageDeliverException;
 import org.jboss.soa.esb.message.Message;
+import org.jboss.soa.esb.message.format.MessageFactory;
 
 public class NormProcessor extends AbstractActionPipelineProcessor {
 
@@ -26,6 +28,8 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 	NormSession session;
 	NormStream stream;
 
+	private boolean initd = false;
+	
 	private String handle;
 
 	public NormProcessor(ConfigTree config) {
@@ -35,22 +39,21 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 	public void initialise() throws ActionLifecycleException {
 		// Initialise resources...
 		try {
-			instance = NormInstance.getInstance();
-
-			session = instance.createSession("224.1.2.3", 6003,
-					NormNode.NORM_NODE_ANY);
-
-			session.setRxPortReuse(true, false);
-
-			session.startSender(1, TX_BUFFER_SIZE, 1400, (short) 16, (short) 4);
-			stream = session.streamOpen(TX_BUFFER_SIZE);
-
-			// Report to the network
-			String xml = "<MESSAGE type=\"connect\" sender=\"" + handle
-					+ "\"></MESSAGE>";
-
-			System.out.println("NORM OUT Stream Setup: " + xml);
-			transmit(xml);
+			if (!initd) {
+				this.instance = new NormInstance();
+				this.session = instance.createSession("224.1.2.3", 6003,
+						NormNode.NORM_NODE_ANY);
+				this.session.setRxPortReuse(true, false);
+				this.session.startSender(1, TX_BUFFER_SIZE, 1400, (short) 16,
+						(short) 4);
+				this.stream = session.streamOpen(TX_BUFFER_SIZE);
+				// Report to the network
+				String xml = "<MESSAGE type=\"connect\" sender=\"" + this.handle
+						+ "\"></MESSAGE>";
+				System.out.println("NORM OUT Stream Setup: " + xml);
+				transmit(xml);
+				initd = true;
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -74,11 +77,18 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 
 	public void destroy() throws ActionLifecycleException {
 		// Cleanup resources...
-		session.stopSender();
-		session.destroySession();
-		instance.destroyInstance();
 
-		System.out.println("Shutting Down Norm Processor.");
+			String text = "<MESSAGE type=\"disconnect\" sender=\"" + this.handle
+					+ "\"></MESSAGE>";
+
+		if (transmit(text)) {
+			this.stream.close();
+			this.session.stopSender();
+			this.session.destroySession();
+
+			System.out.println("Shutting Down Norm Processor.");
+		}
+		
 	}
 
 	private boolean transmit(String message) {
@@ -105,15 +115,13 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 
 			das.flush();
 
-			System.out.println("Writing NORM OUT bytes: "
-					+ baos.toByteArray().length);
+			//System.out.println("Writing NORM OUT bytes: "	+ baos.toByteArray().length);
 			int msgLeft = packetLength
 					- stream.write(baos.toByteArray(), 0, packetLength);
 			if (msgLeft > 0) {
 				System.out.println("NORM OUT: TX BUFFER FULL!");
 			} else {
 				stream.flush(true, NormFlushMode.NORM_FLUSH_PASSIVE);
-				System.out.println("NORM OUT: FLUSHED Message!");
 			}
 
 			das.close();
