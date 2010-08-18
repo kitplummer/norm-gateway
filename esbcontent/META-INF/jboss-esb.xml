@@ -36,9 +36,9 @@
 					<property name="destinations">
 						<NotificationList type="ok">
 							<target class="NotifyConsole" />
-							<target class="NotifyFiles">
+							<target class="NotifyFiles"><!--
 								<file URI="file:////home/kplummer/Dev/norm.log" append="false" />
-								<file URI="/tmp/NORM.log" append="false" />
+								--><file URI="/tmp/NORM.log" append="false" />
 							</target>
 							<target class="NotifyTopics">
 								<topic jndiName="topic/norm_in" />
