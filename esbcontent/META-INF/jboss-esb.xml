@@ -21,13 +21,12 @@
 			</jms-bus> </jms-provider> -->
 	</providers>
 	<services>
-		<service category="Norm" description="Alpha Service for NORM Gateway"
+		<service category="NormIn" description="Alpha Service for NORM Gateway"
 			invmScope="GLOBAL" name="NormGatewayListener">
 			<listeners>
 				<listener busidref="NormBus" is-gateway="true" name="custom-listener">
 					<property name="gatewayClass"
 						value="com.dozersoftware.norm.NormGatewayListener" />
-					<property name="handle" value="SYSTEMX" />
 				</listener>
 			</listeners>
 			<actions mep="OneWay">
@@ -48,17 +47,22 @@
 				</action>
 			</actions>
 		</service>
-		<service category="Norm" description="Send NORM chat messages"
-			invmScope="GLOBAL" name="NormProcessor">
+		<service category="NormOut" description="Send NORM chat messages" name="SNAPNormProcessor">
 			<listeners>
 				<jms-listener busidref="normEsbChannel" name="norm_out" />
 			</listeners>
-			<actions mep="OneWay">
-				<action class="com.dozersoftware.norm.NormProcessor" name="normOut">
-					<property name="handle" value="SYSTEMX" />
+			<actions>
+				<action name="normOut" class="com.dozersoftware.norm.NormProcessor">
 				</action>
-			</actions>
-
-		</service>
+				<action class="org.jboss.soa.esb.actions.Notifier" name="notificationAction">
+					<property name="okMethod" value="notifyOK" />
+					<property name="destinations">
+						<NotificationList type="ok">
+							<target class="NotifyConsole" />
+						</NotificationList>
+					</property>
+				</action>-->
+				
+			</actions></service>
 	</services>
 </jbossesb>

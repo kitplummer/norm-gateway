@@ -41,7 +41,6 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 	private NormInstance instance;
 	private NormSession session;
 
-	private String handle;
 	private boolean stop = false;
 	
 	private int MAX_PACKET_LENGTH = 2048;
@@ -58,7 +57,6 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
 		service = new Service(serviceCategory, serviceName);
 
-		this.handle = config.getAttribute("handle");
 	}
 
 	protected void doInitialise() throws ManagedLifecycleException {

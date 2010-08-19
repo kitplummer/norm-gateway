@@ -2,7 +2,12 @@ package com.dozersoftware.norm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Properties;
 
 import mil.navy.nrl.norm.NormInstance;
 import mil.navy.nrl.norm.NormNode;
@@ -14,9 +19,7 @@ import org.jboss.soa.esb.actions.AbstractActionPipelineProcessor;
 import org.jboss.soa.esb.actions.ActionLifecycleException;
 import org.jboss.soa.esb.actions.ActionProcessingException;
 import org.jboss.soa.esb.helpers.ConfigTree;
-import org.jboss.soa.esb.listeners.message.MessageDeliverException;
 import org.jboss.soa.esb.message.Message;
-import org.jboss.soa.esb.message.format.MessageFactory;
 
 public class NormProcessor extends AbstractActionPipelineProcessor {
 
@@ -33,7 +36,35 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 	private String handle;
 
 	public NormProcessor(ConfigTree config) {
-		handle = config.getAttribute("handle");
+		String esbFile = "config/snap_esb.properties";
+		InputStream esbIn = NormProcessor.class.getClassLoader().getResourceAsStream(esbFile);
+		String sysFile = "snap.properties";
+		InputStream sysIn = NormProcessor.class.getClassLoader().getResourceAsStream(sysFile);
+		try {
+			
+			if (esbIn == null) {
+				System.out.println("NORM: Can't Read ESB Props File");
+			}
+			Properties esbProps = new java.util.Properties();
+			esbProps.load(esbIn);
+			
+			if (sysIn == null) {
+				System.out.println("NORM: Can't Read System Props File");
+			}
+			Properties sysProps = new java.util.Properties();
+			sysProps.load(sysIn);
+			
+			this.handle = sysProps.getProperty("handle");
+			
+			System.out.println("NORM Gateway Version: " + esbProps.getProperty("version"));
+		} catch (Exception e) {
+
+			System.out.println("NORM ERROR: Processing Properties...");
+			this.handle = "UNK";
+			
+			
+		}
+		
 	}
 
 	public void initialise() throws ActionLifecycleException {
@@ -50,7 +81,6 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 				// Report to the network
 				String xml = "<MESSAGE type=\"connect\" sender=\"" + this.handle
 						+ "\"></MESSAGE>";
-				System.out.println("NORM OUT Stream Setup: " + xml);
 				transmit(xml);
 				initd = true;
 			}
@@ -92,6 +122,7 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 	}
 
 	private boolean transmit(String message) {
+		System.out.println("NORM: Sending -> " + message);
 		// Write data into an internal byte array
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
