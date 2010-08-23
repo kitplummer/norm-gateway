@@ -11,7 +11,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import mil.navy.nrl.norm.NormEvent;
-import mil.navy.nrl.norm.NormFile;
 import mil.navy.nrl.norm.NormInstance;
 import mil.navy.nrl.norm.NormNode;
 import mil.navy.nrl.norm.NormObject;
@@ -40,8 +39,6 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 
 	private NormInstance instance;
 	private NormSession session;
-
-	private boolean stop = false;
 	
 	private int MAX_PACKET_LENGTH = 2048;
 
@@ -134,8 +131,6 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 											.println("Inside NORMStreamRead check - readLength:"
 													+ readLength);
 									if (readLength > 0) {
-										System.out.println("rxIndex: "
-												+ rxIndex);
 										rxIndex += readLength;
 
 										if (rxPacketLength == 0) {
@@ -168,7 +163,7 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 									msgSync = false;
 									rxIndex = rxPacketLength = 0;
 									System.out
-											.println("normChat: Stream broken, request resync/reset");
+											.println("normChat: Stream end, request resync/reset");
 
 								}
 
@@ -221,7 +216,6 @@ public class NormGatewayListener extends AbstractThreadedManagedLifecycle {
 	}
 
 	protected void doStop() {
-		this.stop = true;
 		super.setRunning(ManagedLifecycleThreadState.STOPPING);
 		setRunning(ManagedLifecycleThreadState.STOPPING);
 		session.stopReceiver();
