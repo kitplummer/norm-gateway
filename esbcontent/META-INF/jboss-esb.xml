@@ -51,7 +51,7 @@
 			<listeners>
 				<jms-listener busidref="normEsbChannel" name="norm_out" />
 			</listeners>
-			<actions>
+			<actions mep="OneWay">
 				<action name="normOut" class="com.dozersoftware.norm.NormProcessor" />
 				<action class="org.jboss.soa.esb.actions.Notifier" name="notificationAction">
 					<property name="okMethod" value="notifyOK" />

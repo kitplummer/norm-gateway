@@ -122,7 +122,7 @@ public class NormProcessor extends AbstractActionPipelineProcessor {
 	}
 
 	private boolean transmit(String message) {
-		System.out.println("NORM: Sending -> " + message);
+		//System.out.println("NORM: Sending -> " + message);
 		// Write data into an internal byte array
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
